@@ -2682,6 +2682,41 @@ end
 docSpecial('eval-compiler', {'...'}, 'Evaluate the body at compile-time.'
                .. ' Use the macro system instead if possible.')
 
+function module.scopetest(options)
+  local opts = copy(options)
+  -- This would get set for us when calling eval, but we want to seed it
+  -- with a value that is persistent so it doesn't get reset on each eval.
+  -- TODO: remove?
+  --
+  local env = makeCompilerEnv()
+  local wenv = wrapEnv(env)
+  if opts.allowedGlobals == nil then
+      opts.allowedGlobals = macroGlobals(env, currentGlobalNames())
+  end
+
+  opts.useMetadata = options.useMetadata ~= false
+  opts.moduleName = options.moduleName
+  local oldRootOptions = rootOptions
+
+
+  local scope = makeScope(COMPILER_SCOPE)
+  opts.scope = scope
+
+  local function compstr(str)
+    local status, luaSource = pcall(compileString, str, opts)
+    if not status then
+      return status, luaSource
+    end
+    local status, loader = pcall(loadCode, luaSource, wenv)
+    if not status then
+      return status, loader, luaSource
+    else
+      return loader, luaSource
+    end
+  end
+  return compstr
+end
+
 -- Load standard macros
 local stdmacros = [===[
 {"->" (fn [val ...]
