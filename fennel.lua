@@ -2702,6 +2702,15 @@ function module.scopetest(options)
   local scope = makeScope(COMPILER_SCOPE)
   opts.scope = scope
 
+  scope.specials['macros'] = function(ast, scope, parent)
+      assertCompile(#ast == 2, "Expected one table argument", ast)
+      local luaSource = compile(ast[2], { scope = scope,
+                                       useMetadata = opts.useMetadata })
+      local loader = loadCode(luaSource, wenv)
+      macros = loader()
+      addMacros(macros, ast, scope, parent)
+  end
+
   local function compstr(str)
     local status, luaSource = pcall(compileString, str, opts)
     if not status then

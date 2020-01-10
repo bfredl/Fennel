@@ -14,10 +14,10 @@ runner = fennel.scopetest({})
 function reader(str)
   local res, err, errsrc = runner(str)
   if not res then
-    print(errsrc)
+    require'luadev'.print(errsrc)
     return nil, err
   end
-  print(err)
+  require'luadev'.print(err)
   return res
 end
 luadev.reader = reader
